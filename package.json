@@ -15,11 +15,11 @@
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
-      {
-        "command": "nextjsComponentTree.showTree",
-        "title": "Show Next.js Component Tree"
-      }
-    ],
+    {
+      "command": "nextree.selectProject",
+      "title": "Nextree: Selecionar Projeto Next.js"
+    }
+  ],
     "viewsWelcome": [
       {
         "view": "workbench.explorer.emptyView",
@@ -33,7 +33,8 @@
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint",
-    "test": "node ./out/test/runTest.js"
+    "test": "node ./out/test/runTest.js",
+    "start:test": "ts-node test.ts"
   },
   "devDependencies": {
     "@eslint/js": "^9.13.0",
@@ -44,7 +45,8 @@
     "@vscode/test-electron": "^2.3.9",
     "eslint": "^9.13.0",
     "glob": "^7.1.6",
-    "typescript": "^5.8.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3",
     "typescript-eslint": "^8.26.0"
   }
 }
