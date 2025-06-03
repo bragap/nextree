@@ -17,7 +17,7 @@
     "commands": [
     {
       "command": "nextree.selectProject",
-      "title": "Nextree: Selecionar Projeto Next.js"
+      "title": "Nextree: Select Next.js Project"
     }
   ],
     "viewsWelcome": [

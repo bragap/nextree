@@ -33,32 +33,45 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.showNextreePanel = showNextreePanel;
 exports.activate = activate;
 const vscode = __importStar(require("vscode"));
 const treeGenerator_1 = require("./treeGenerator");
+const path = __importStar(require("path"));
+const fs = __importStar(require("fs"));
+function showNextreePanel(context, tree) {
+    const panel = vscode.window.createWebviewPanel('nextreeView', 'Nextree: Components Tree', vscode.ViewColumn.One, {
+        enableScripts: true,
+        localResourceRoots: [vscode.Uri.file(path.join(context.extensionPath, 'media'))],
+    });
+    const indexPath = path.join(context.extensionPath, 'media', 'index.html');
+    let html = fs.readFileSync(indexPath, 'utf8');
+    html = html.replace(/src="\/src\/main.tsx"/, `src="${panel.webview.asWebviewUri(vscode.Uri.file(path.join(context.extensionPath, 'media/assets/main.js')))}"`);
+    panel.webview.html = html;
+    panel.webview.onDidReceiveMessage((msg) => {
+        vscode.window.showInformationMessage('Mensagem do WebView: ' + JSON.stringify(msg));
+    });
+    panel.webview.postMessage(tree);
+}
 function activate(context) {
     const disposable = vscode.commands.registerCommand('nextree.selectProject', async () => {
         const uri = await vscode.window.showOpenDialog({
             canSelectFolders: true,
             canSelectFiles: false,
-            openLabel: 'Selecionar projeto Next.js',
+            openLabel: 'Select Next.js project',
         });
         if (!uri || uri.length === 0) {
-            vscode.window.showErrorMessage('Nenhuma pasta foi selecionada.');
+            vscode.window.showErrorMessage('No folder was selected.');
             return;
         }
         const selectedPath = uri[0].fsPath;
         try {
             const tree = (0, treeGenerator_1.generateNextTree)(selectedPath);
-            // Exibe como JSON no console ou em uma output channel por enquanto
-            const output = vscode.window.createOutputChannel('Nextree');
-            output.appendLine('📦 Estrutura detectada:');
-            output.appendLine(JSON.stringify(tree, null, 2));
-            output.show();
-            vscode.window.showInformationMessage('Árvore do projeto Next.js gerada com sucesso!');
+            showNextreePanel(context, tree);
+            vscode.window.showInformationMessage('Next.js tree project created with success!');
         }
         catch (error) {
-            vscode.window.showErrorMessage('Erro ao gerar a árvore: ' + error);
+            vscode.window.showErrorMessage('Error creating tree: ' + error);
         }
     });
     context.subscriptions.push(disposable);
