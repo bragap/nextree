@@ -27,7 +27,7 @@ Nextree is tailored for Next.js projects that use the App Router and follows mod
 
 Instead of manually navigating nested folders, Nextree provides a visual tree of the entire component and module hierarchy, making it easier to understand and maintain your project structure.
 
-This extension is inspired by [Reactree](https://marketplace.visualstudio.com/items?itemName=ReacTreeDev.reactree), but is specifically adapted for Next.js projects.
+This extension is inspired by Reactree, but is specifically adapted for Next.js projects.
 
 ---
 
