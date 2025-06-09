@@ -130,4 +130,4 @@ If you find this project useful, please consider starring it on GitHub.
 
 ## Acknowledgements
 
-Nextree was inspired by [Reactree](https://marketplace.visualstudio.com/items?itemName=AhmadAwais.reactree), a visual hierarchy tool for React projects. Nextree extends these ideas to support the App Router, layouts, modular folder structures, and domain isolation found in professional Next.js applications.
+Nextree was inspired by [Reactree](https://github.com/oslabs-beta/ReacTree), a visual hierarchy tool for React projects. Nextree extends these ideas to support the App Router, layouts, modular folder structures, and domain isolation found in professional Next.js applications.
