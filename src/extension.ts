@@ -3,8 +3,8 @@ import { analyzeNextJsProject } from './analyzer';
 import { showGraphWebview } from './webview';
 
 export function activate(context: vscode.ExtensionContext) {
-    let disposable = vscode.commands.registerCommand('nextjs-graph-visualizer.showGraph', async () => {
-        vscode.window.showInformationMessage('Comando Next.js Graph Visualizer executado!');
+    let disposable = vscode.commands.registerCommand('nextree.showGraph', async () => {
+        vscode.window.showInformationMessage('Comando Nextree executado!');
         const workspaceFolders = vscode.workspace.workspaceFolders;
         if (!workspaceFolders) {
             vscode.window.showErrorMessage('No workspace folder open.');

@@ -55,21 +55,18 @@ async function analyzeNextJsProject(projectPath) {
         }
     }
     walk(projectPath);
-    // Log quantidade de arquivos encontrados
-    if (files.length === 0) {
-        // eslint-disable-next-line no-console
-        console.log('Nenhum arquivo .js/.jsx/.ts/.tsx encontrado no projeto!');
-    }
-    else {
-        // eslint-disable-next-line no-console
-        console.log(`Foram encontrados ${files.length} arquivos JS/TS.`);
-    }
-    // Cria nodes para cada arquivo
     for (const file of files) {
         const id = path.relative(projectPath, file);
-        nodes.push({ id, label: path.basename(file), file: id });
+        const content = fs.readFileSync(file, 'utf-8');
+        // Detecta client/server component
+        const isClient = /^(['\"]use client['\"];?)/m.test(content.split('\n').slice(0, 5).join('\n'));
+        nodes.push({
+            id,
+            label: path.basename(file) + (isClient ? ' (client)' : ' (server)'),
+            file: id,
+            type: isClient ? 'client' : 'server',
+        });
     }
-    // Cria edges para cada import
     for (const file of files) {
         const id = path.relative(projectPath, file);
         const content = fs.readFileSync(file, 'utf-8');
@@ -79,7 +76,6 @@ async function analyzeNextJsProject(projectPath) {
             let importPath = match[1];
             if (importPath.startsWith('.')) {
                 let importedFile = path.resolve(path.dirname(file), importPath);
-                // Tenta encontrar o arquivo real
                 let found = files.find(f => f.startsWith(importedFile));
                 if (found) {
                     const to = path.relative(projectPath, found);

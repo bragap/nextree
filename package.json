@@ -1,6 +1,6 @@
 {
-  "name": "nextjs-graph-visualizer",
-  "displayName": "Next.js Graph Visualizer",
+  "name": "nextree",
+  "displayName": "Nextree",
   "description": "Visualize Next.js component usage as a graph inside VS Code.",
   "version": "0.0.1",
   "engines": {
@@ -13,13 +13,13 @@
     "watch": "tsc -watch -p ./"
   },
   "activationEvents": [
-    "onCommand:nextjs-graph-visualizer.showGraph"
+    "onCommand:nextree.showGraph"
   ],
   "contributes": {
     "commands": [
       {
-        "command": "nextjs-graph-visualizer.showGraph",
-        "title": "Show Next.js Component Graph"
+        "command": "nextree.showGraph",
+        "title": "Show Nextree Component Graph"
       }
     ]
   },
