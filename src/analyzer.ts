@@ -5,7 +5,7 @@ export interface GraphNode {
     id: string;
     label: string;
     file: string;
-    type: 'client' | 'server';
+    type: 'client' | 'server' | 'store';
 }
 
 export interface GraphEdge {
@@ -41,11 +41,25 @@ export async function analyzeNextJsProject(projectPath: string): Promise<GraphDa
     for (const file of files) {
         const id = path.relative(projectPath, file);
         const content = fs.readFileSync(file, 'utf-8');
+        // Detecta store/context
+        const isStore = /store|zustand|redux/i.test(path.basename(file)) ||
+            /from ['"](zustand|redux|@reduxjs\/toolkit)['"]/.test(content) ||
+            /createContext\s*\(/.test(content) ||
+            /from ['"]react['"];?/.test(content) && /createContext/.test(content);
+        if (isStore) {
+            nodes.push({
+                id,
+                label: path.basename(file),
+                file: id,
+                type: 'store',
+            });
+            continue;
+        }
         // Detecta client/server component
-        const isClient = /^(['\"]use client['\"];?)/m.test(content.split('\n').slice(0, 5).join('\n'));
+        const isClient = /^(['"]use client['\"];?)/m.test(content.split('\n').slice(0, 5).join('\n'));
         nodes.push({
             id,
-            label: path.basename(file) + (isClient ? ' (client)' : ' (server)'),
+            label: path.basename(file),
             file: id,
             type: isClient ? 'client' : 'server',
         });
