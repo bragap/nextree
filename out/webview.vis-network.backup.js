@@ -1,4 +1,6 @@
 "use strict";
+// Backup da visualização original com vis-network
+// Salvo em 2025-06-14
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -42,6 +44,7 @@ function showGraphWebview(context, graphData) {
 function getWebviewContent(graphData, webview, extensionUri) {
     // Identifica todos os page.tsx/page.jsx/etc e gera abas
     const pageNodes = graphData.nodes.filter(n => /^page\.(t|j)sx?$/.test(n.label.replace(/ \(client\)| \(server\)/, '')));
+    // Só cria aba se a subárvore tiver mais de 1 nó
     function getSubgraphIds(pageId) {
         const visited = new Set();
         function dfs(nodeId) {
@@ -51,7 +54,7 @@ function getWebviewContent(graphData, webview, extensionUri) {
             graphData.edges.filter(e => e.from === nodeId).forEach(e => dfs(e.to));
         }
         dfs(pageId);
-        return Array.from(visited);
+        return Array.from(visited); // <-- serializa como array
     }
     const pageTabs = pageNodes
         .map(n => {
@@ -61,33 +64,38 @@ function getWebviewContent(graphData, webview, extensionUri) {
         return { id: n.id, label: route || '/', subgraphIds };
     })
         .filter(tab => tab.subgraphIds.length > 1);
-    // Ajusta labels e cores
+    // Ajusta labels normalmente
     const nodes = graphData.nodes.map(n => {
         let label = n.label.replace(/ \(client\)| \(server\)/, '');
-        let color = n.type === 'store' ? '#ff9800' : n.type === 'client' ? '#4caf50' : '#2196f3';
         if (/^page\.(t|j)sx?$/.test(label)) {
-            // Exibe explicitamente client/server na label do nó page.tsx
-            if (n.type === 'client') {
-                label = 'page.tsx (client)';
-            }
-            else if (n.type === 'server') {
-                label = 'page.tsx (server)';
-            }
-            else {
-                label = 'page.tsx';
-            }
-            color = '#e53935'; // vermelho
+            const parts = n.file.split(/[\\\/]/);
+            const route = '/' + parts.slice(1, -1).join('/');
+            label = `${label} (${route || '/'})`;
         }
-        return { ...n, label, color };
+        return { ...n, label };
     });
+    // Função para buscar subárvore a partir de um page
+    function getSubgraph(pageId) {
+        const visited = new Set();
+        function dfs(nodeId) {
+            if (visited.has(nodeId))
+                return;
+            visited.add(nodeId);
+            graphData.edges.filter(e => e.from === nodeId).forEach(e => dfs(e.to));
+        }
+        dfs(pageId);
+        const subNodes = nodes.filter(n => visited.has(n.id));
+        const subEdges = graphData.edges.filter(e => visited.has(e.from) && visited.has(e.to));
+        return { subNodes, subEdges };
+    }
+    // Usa vis-network via CDN
     return `
     <!DOCTYPE html>
     <html lang="en">
     <head>
         <meta charset="UTF-8">
         <title>Nextree Component Graph</title>
-        <link href="https://unpkg.com/cytoscape@3.26.0/dist/cytoscape.min.css" rel="stylesheet" />
-        <script src="https://unpkg.com/cytoscape@3.26.0/dist/cytoscape.min.js"></script>
+        <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
         <style>
             #mynetwork { width: 100vw; height: 90vh; border: 1px solid #ccc; }
             #legend { position: absolute; top: 20px; right: 40px; background: #111; color: #fff; border: 1px solid #bbb; border-radius: 8px; padding: 10px 18px; font-size: 15px; box-shadow: 0 2px 8px #0001; z-index: 10; }
@@ -100,7 +108,6 @@ function getWebviewContent(graphData, webview, extensionUri) {
     <body>
         <h2>Nextree Component Graph</h2>
         <div id="legend">
-            <div><span class="legend-dot" style="background:#e53935"></span>Page.tsx</div>
             <div><span class="legend-dot" style="background:#4caf50"></span>Client Component</div>
             <div><span class="legend-dot" style="background:#2196f3"></span>Server Component</div>
             <div><span class="legend-dot" style="background:#ff9800"></span>Store/Context</div>
@@ -110,71 +117,55 @@ function getWebviewContent(graphData, webview, extensionUri) {
         </div>
         <div id="mynetwork"></div>
         <script>
-            const allNodes = ${JSON.stringify(nodes.map(n => ({ data: { id: n.id, label: n.label, type: n.type }, style: { 'background-color': n.color } })))};
-            const allEdges = ${JSON.stringify(graphData.edges.map(e => ({ data: { source: e.from, target: e.to } })))};
+            const allNodes = ${JSON.stringify(nodes.map(n => ({ id: n.id, label: n.label, color: n.type === 'store' ? '#ff9800' : n.type === 'client' ? '#4caf50' : '#2196f3' })))};
+            const allEdges = ${JSON.stringify(graphData.edges.map(e => ({ ...e, arrows: 'to' })))};
             let pageTabs = ${JSON.stringify(pageTabs)};
+            // Converte subgraphIds para Set
             pageTabs = pageTabs.map(tab => ({ ...tab, subgraphIds: new Set(tab.subgraphIds) }));
             function getSubgraph(pageId) {
                 const tab = pageTabs.find(t => t.id === pageId);
                 if (!tab) return { subNodes: [], subEdges: [] };
-                const subNodes = allNodes.filter(n => tab.subgraphIds.has(n.data.id));
-                const subEdges = allEdges.filter(e => tab.subgraphIds.has(e.data.source) && tab.subgraphIds.has(e.data.target));
+                const subNodes = allNodes.filter(n => tab.subgraphIds.has(n.id));
+                const subEdges = allEdges.filter(e => tab.subgraphIds.has(e.from) && tab.subgraphIds.has(e.to));
                 return { subNodes, subEdges };
             }
             function draw(tabId) {
                 const { subNodes, subEdges } = getSubgraph(tabId);
+                const visNodes = new vis.DataSet(subNodes);
+                const visEdges = new vis.DataSet(subEdges);
                 const container = document.getElementById('mynetwork');
                 container.innerHTML = '';
-                const cy = cytoscape({
-                    container,
-                    elements: [ ...subNodes, ...subEdges ],
-                    style: [
-                        {
-                            selector: 'node',
-                            style: {
-                                'background-color': 'data(background-color)',
-                                'label': 'data(label)',
-                                'color': '#fff',
-                                'text-valign': 'center',
-                                'text-halign': 'center',
-                                'font-size': 13,
-                                'width': 80,
-                                'height': 40,
-                                'shape': 'roundrectangle',
-                                'text-wrap': 'wrap',
-                                'text-max-width': 70,
-                                'text-outline-width': 2,
-                                'text-outline-color': '#222'
-                            }
-                        },
-                        {
-                            selector: 'edge',
-                            style: {
-                                'width': 0.7,
-                                'line-color': '#bbb',
-                                'target-arrow-color': '#bbb',
-                                'target-arrow-shape': 'triangle',
-                                'curve-style': 'bezier',
-                                'arrow-scale': 0.9
-                            }
-                        }
-                    ],
+                const data = { nodes: visNodes, edges: visEdges };
+                const options = {
                     layout: {
-                        name: 'breadthfirst',
-                        directed: true,
-                        padding: 40,
-                        spacingFactor: 1.5,
-                        animate: true,
-                        orientation: 'vertical',
-                        roots: subNodes.filter(n => /^page\.(t|j)sx?/.test(n.data.label)).map(n => n.data.id),
-                        nodeDimensionsIncludeLabels: true,
-                        edgeElasticity: 100,
-                        edgeSep: 100,
-                        nodeSep: 100,
-                        rankDir: 'TB'
-                    }
+                        hierarchical: {
+                            enabled: true,
+                            direction: 'UD',
+                            sortMethod: 'hubsize',
+                            nodeSpacing: 350,
+                            levelSeparation: 250,
+                            treeSpacing: 500,
+                            blockShifting: true,
+                            edgeMinimization: true,
+                            parentCentralization: true
+                        }
+                    },
+                    edges: {
+                        smooth: {
+                            type: 'cubicBezier',
+                            forceDirection: 'vertical',
+                            roundness: 0.4
+                        }
+                    },
+                    physics: false,
+                    interaction: { dragNodes: true, zoomView: true, dragView: true }
+                };
+                const network = new vis.Network(container, data, options);
+                network.once('afterDrawing', function() {
+                    network.fit({ animation: true });
                 });
             }
+            // Tabs
             pageTabs.forEach((tab, i) => {
                 const el = document.getElementById('tab-' + tab.id);
                 if (!el) return;
@@ -183,6 +174,7 @@ function getWebviewContent(graphData, webview, extensionUri) {
                     el.classList.add('active');
                     draw(tab.id);
                 };
+                // Ativa a primeira aba por padrão
                 if (i === 0) draw(tab.id);
             });
         </script>
@@ -190,4 +182,4 @@ function getWebviewContent(graphData, webview, extensionUri) {
     </html>
     `;
 }
-//# sourceMappingURL=webview.js.map
+//# sourceMappingURL=webview.vis-network.backup.js.map
