@@ -1,7 +1,10 @@
-import { useEffect, useState } from 'react';
-export default function App() {
-    const [tree, setTree] = useState();
-    useEffect(() => {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.default = App;
+const react_1 = require("react");
+function App() {
+    const [tree, setTree] = (0, react_1.useState)();
+    (0, react_1.useEffect)(() => {
         window.addEventListener('message', (event) => {
             setTree(event.data);
         });

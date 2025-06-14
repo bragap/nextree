@@ -1,60 +1,25 @@
 import * as vscode from 'vscode';
-import { generateNextTree } from './treeGenerator';
-import * as path from 'path';
-import * as fs from 'fs';
-
-export function showNextreePanel(context: vscode.ExtensionContext, tree: any) {
-  const panel = vscode.window.createWebviewPanel(
-    'nextreeView',
-    'Nextree: Components Tree',
-    vscode.ViewColumn.One,
-    {
-      enableScripts: true,
-      localResourceRoots: [vscode.Uri.file(path.join(context.extensionPath, 'media'))],
-    }
-  );
-
-  const indexPath = path.join(context.extensionPath, 'media', 'index.html');
-  let html = fs.readFileSync(indexPath, 'utf8');
-
-  html = html.replace(/src="\/src\/main.tsx"/, `src="${panel.webview.asWebviewUri(
-    vscode.Uri.file(path.join(context.extensionPath, 'media/assets/main.js'))
-  )}"`);
-
-  panel.webview.html = html;
-
-  panel.webview.onDidReceiveMessage((msg) => {
-    vscode.window.showInformationMessage('Mensagem do WebView: ' + JSON.stringify(msg));
-  });
-
-  panel.webview.postMessage(tree);
-}
-
+import { analyzeNextJsProject } from './analyzer';
+import { showGraphWebview } from './webview';
 
 export function activate(context: vscode.ExtensionContext) {
-  const disposable = vscode.commands.registerCommand('nextree.selectProject', async () => {
-    const uri = await vscode.window.showOpenDialog({
-      canSelectFolders: true,
-      canSelectFiles: false,
-      openLabel: 'Select Next.js project',
+    let disposable = vscode.commands.registerCommand('nextjs-graph-visualizer.showGraph', async () => {
+        vscode.window.showInformationMessage('Comando Next.js Graph Visualizer executado!');
+        const workspaceFolders = vscode.workspace.workspaceFolders;
+        if (!workspaceFolders) {
+            vscode.window.showErrorMessage('No workspace folder open.');
+            return;
+        }
+        const projectPath = workspaceFolders[0].uri.fsPath;
+        const graphData = await analyzeNextJsProject(projectPath);
+        vscode.window.showInformationMessage(`Análise: ${graphData.nodes.length} nodes, ${graphData.edges.length} edges.`);
+        if (graphData.nodes.length === 0) {
+            vscode.window.showWarningMessage('Nenhum componente Next.js encontrado no projeto.');
+            return;
+        }
+        showGraphWebview(context, graphData);
     });
-
-    if (!uri || uri.length === 0) {
-      vscode.window.showErrorMessage('No folder was selected.');
-      return;
-    }
-
-    const selectedPath = uri[0].fsPath;
-
-    try {
-      const tree = generateNextTree(selectedPath);
-      showNextreePanel(context, tree);
-
-      vscode.window.showInformationMessage('Next.js tree project created with success!');
-    } catch (error) {
-      vscode.window.showErrorMessage('Error creating tree: ' + error);
-    }
-  });
-
-  context.subscriptions.push(disposable);
+    context.subscriptions.push(disposable);
 }
+
+export function deactivate() {}

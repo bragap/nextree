@@ -33,29 +33,38 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.activate = activate;
-exports.deactivate = deactivate;
+exports.showGraphWebview = showGraphWebview;
 const vscode = __importStar(require("vscode"));
-const analyzer_1 = require("./analyzer");
-const webview_1 = require("./webview");
-function activate(context) {
-    let disposable = vscode.commands.registerCommand('nextjs-graph-visualizer.showGraph', async () => {
-        vscode.window.showInformationMessage('Comando Next.js Graph Visualizer executado!');
-        const workspaceFolders = vscode.workspace.workspaceFolders;
-        if (!workspaceFolders) {
-            vscode.window.showErrorMessage('No workspace folder open.');
-            return;
-        }
-        const projectPath = workspaceFolders[0].uri.fsPath;
-        const graphData = await (0, analyzer_1.analyzeNextJsProject)(projectPath);
-        vscode.window.showInformationMessage(`Análise: ${graphData.nodes.length} nodes, ${graphData.edges.length} edges.`);
-        if (graphData.nodes.length === 0) {
-            vscode.window.showWarningMessage('Nenhum componente Next.js encontrado no projeto.');
-            return;
-        }
-        (0, webview_1.showGraphWebview)(context, graphData);
-    });
-    context.subscriptions.push(disposable);
+function showGraphWebview(context, graphData) {
+    const panel = vscode.window.createWebviewPanel('nextjsGraph', 'Next.js Component Graph', vscode.ViewColumn.One, { enableScripts: true });
+    panel.webview.html = getWebviewContent(graphData, panel.webview, context.extensionUri);
 }
-function deactivate() { }
-//# sourceMappingURL=extension.js.map
+function getWebviewContent(graphData, webview, extensionUri) {
+    // Usa vis-network via CDN
+    return `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Next.js Component Graph</title>
+        <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+        <style>
+            #mynetwork { width: 100vw; height: 90vh; border: 1px solid #ccc; }
+        </style>
+    </head>
+    <body>
+        <h2>Next.js Component Graph</h2>
+        <div id="mynetwork"></div>
+        <script>
+            const nodes = new vis.DataSet(${JSON.stringify(graphData.nodes.map(n => ({ id: n.id, label: n.label })))});
+            const edges = new vis.DataSet(${JSON.stringify(graphData.edges)});
+            const container = document.getElementById('mynetwork');
+            const data = { nodes, edges };
+            const options = { layout: { improvedLayout: true }, physics: { enabled: true } };
+            new vis.Network(container, data, options);
+        </script>
+    </body>
+    </html>
+    `;
+}
+//# sourceMappingURL=webview.js.map
