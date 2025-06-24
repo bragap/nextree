@@ -190,4 +190,4 @@ function getWebviewContent(graphData, webview, extensionUri) {
     </html>
     `;
 }
-//# sourceMappingURL=webview.js.map
+//# sourceMappingURL=graphWebviewPanel.js.map

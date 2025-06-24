@@ -36,24 +36,24 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.activate = activate;
 exports.deactivate = deactivate;
 const vscode = __importStar(require("vscode"));
-const analyzer_1 = require("./analyzer");
-const webview_1 = require("./webview");
+const nextjsAnalyzer_1 = require("./nextjsAnalyzer");
+const graphWebviewPanel_1 = require("./graphWebviewPanel");
 function activate(context) {
     let disposable = vscode.commands.registerCommand('nextree.showGraph', async () => {
-        vscode.window.showInformationMessage('Comando Nextree executado!');
+        vscode.window.showInformationMessage('Nextree comand executed!');
         const workspaceFolders = vscode.workspace.workspaceFolders;
         if (!workspaceFolders) {
             vscode.window.showErrorMessage('No workspace folder open.');
             return;
         }
         const projectPath = workspaceFolders[0].uri.fsPath;
-        const graphData = await (0, analyzer_1.analyzeNextJsProject)(projectPath);
-        vscode.window.showInformationMessage(`Análise: ${graphData.nodes.length} nodes, ${graphData.edges.length} edges.`);
+        const graphData = await (0, nextjsAnalyzer_1.analyzeNextJsProject)(projectPath);
+        vscode.window.showInformationMessage(`Analysis: ${graphData.nodes.length} nodes, ${graphData.edges.length} edges.`);
         if (graphData.nodes.length === 0) {
-            vscode.window.showWarningMessage('Nenhum componente Next.js encontrado no projeto.');
+            vscode.window.showWarningMessage('Anyone Next.js component was found in this project.');
             return;
         }
-        (0, webview_1.showGraphWebview)(context, graphData);
+        (0, graphWebviewPanel_1.showGraphWebview)(context, graphData);
     });
     context.subscriptions.push(disposable);
 }

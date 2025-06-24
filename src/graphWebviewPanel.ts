@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
-import * as path from 'path';
-import { GraphData } from './analyzer';
+import { GraphData } from './nextjsAnalyzer';
 
 export function showGraphWebview(context: vscode.ExtensionContext, graphData: GraphData) {
     const panel = vscode.window.createWebviewPanel(
@@ -13,8 +12,9 @@ export function showGraphWebview(context: vscode.ExtensionContext, graphData: Gr
 }
 
 function getWebviewContent(graphData: GraphData, webview: vscode.Webview, extensionUri: vscode.Uri): string {
-    // Identifica todos os page.tsx/page.jsx/etc e gera abas
+    // Identify all page.tsx/page.jsx/etc and generete tabs
     const pageNodes = graphData.nodes.filter(n => /^page\.(t|j)sx?$/.test(n.label.replace(/ \(client\)| \(server\)/, '')));
+
     function getSubgraphIds(pageId: string) {
         const visited = new Set<string>();
         function dfs(nodeId: string) {
@@ -25,6 +25,7 @@ function getWebviewContent(graphData: GraphData, webview: vscode.Webview, extens
         dfs(pageId);
         return Array.from(visited);
     }
+
     const pageTabs = pageNodes
         .map(n => {
             const parts = n.file.split(/[\\\/]/);
@@ -33,12 +34,13 @@ function getWebviewContent(graphData: GraphData, webview: vscode.Webview, extens
             return { id: n.id, label: route || '/', subgraphIds };
         })
         .filter(tab => tab.subgraphIds.length > 1);
-    // Ajusta labels e cores
+
+    // Adjust labels and colors
     const nodes = graphData.nodes.map(n => {
         let label = n.label.replace(/ \(client\)| \(server\)/, '');
         let color = n.type === 'store' ? '#ff9800' : n.type === 'client' ? '#4caf50' : '#2196f3';
         if (/^page\.(t|j)sx?$/.test(label)) {
-            // Exibe explicitamente client/server na label do nó page.tsx
+            // Show client/server on node label page.tsx
             if (n.type === 'client') {
                 label = 'page.tsx (client)';
             } else if (n.type === 'server') {
@@ -46,10 +48,11 @@ function getWebviewContent(graphData: GraphData, webview: vscode.Webview, extens
             } else {
                 label = 'page.tsx';
             }
-            color = '#e53935'; // vermelho
+            color = '#e53935';
         }
         return { ...n, label, color };
     });
+
     return `
     <!DOCTYPE html>
     <html lang="en">
