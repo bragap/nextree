@@ -33,29 +33,32 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.activate = activate;
-exports.deactivate = deactivate;
+exports.showTreeWebview = showTreeWebview;
 const vscode = __importStar(require("vscode"));
-const treeAnalyzer_1 = require("./treeAnalyzer");
-const treeWebviewHost_1 = require("./treeWebviewHost");
-function activate(context) {
-    let disposable = vscode.commands.registerCommand('nextree.showTree', async () => {
-        vscode.window.showInformationMessage('Nextree comand executed!');
-        const workspaceFolders = vscode.workspace.workspaceFolders;
-        if (!workspaceFolders) {
-            vscode.window.showErrorMessage('No workspace folder open.');
-            return;
+function showTreeWebview(context, treeData) {
+    const panel = vscode.window.createWebviewPanel('nextreeComponents', 'Nextree Component Tree', vscode.ViewColumn.One, { enableScripts: true });
+    panel.webview.html = getWebviewContent(panel.webview, context.extensionUri);
+    panel.webview.onDidReceiveMessage((message) => {
+        if (message && message.type === 'get-tree-data') {
+            panel.webview.postMessage({ type: "tree-data", data: treeData });
         }
-        const projectPath = workspaceFolders[0].uri.fsPath;
-        const treeData = await (0, treeAnalyzer_1.analyzeNextJsProject)(projectPath);
-        vscode.window.showInformationMessage(`Analysis: ${treeData.nodes.length} nodes, ${treeData.edges.length} edges.`);
-        if (treeData.nodes.length === 0) {
-            vscode.window.showWarningMessage('No Next.js component was found in this project.');
-            return;
-        }
-        (0, treeWebviewHost_1.showTreeWebview)(context, treeData);
     });
-    context.subscriptions.push(disposable);
+    panel.webview.postMessage({ type: 'tree-data', data: treeData });
 }
-function deactivate() { }
-//# sourceMappingURL=extension.js.map
+function getWebviewContent(webview, extensionUri) {
+    const reactAppUri = webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, 'media', 'assets', 'main.js'));
+    return `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Nextree Component Tree</title>
+    </head>
+    <body>
+        <div id="root"></div>
+        <script type="module" src="${reactAppUri}"></script>
+    </body>
+    </html>
+    `;
+}
+//# sourceMappingURL=treeWebviewHost.js.map

@@ -1,28 +1,28 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-export interface GraphNode {
+export interface TreeNode {
     id: string;
     label: string;
     file: string;
     type: 'client' | 'server' | 'store';
 }
 
-export interface GraphEdge {
+export interface TreeEdge {
     from: string;
     to: string;
 }
 
-export interface GraphData {
-    nodes: GraphNode[];
-    edges: GraphEdge[];
+export interface TreeData {
+    nodes: TreeNode[];
+    edges: TreeEdge[];
 }
 
 const IGNORED_DIRS = ['node_modules', '.next', 'out', 'dist', '.git'];
 
-export async function analyzeNextJsProject(projectPath: string): Promise<GraphData> {
-    const nodes: GraphNode[] = [];
-    const edges: GraphEdge[] = [];
+export async function analyzeNextJsProject(projectPath: string): Promise<TreeData> {
+    const nodes: TreeNode[] = [];
+    const edges: TreeEdge[] = [];
     const files: string[] = [];
 
     function walk(dir: string) {
@@ -41,7 +41,7 @@ export async function analyzeNextJsProject(projectPath: string): Promise<GraphDa
     for (const file of files) {
         const id = path.relative(projectPath, file);
         const content = fs.readFileSync(file, 'utf-8');
-        // Detect store/context
+
         const isStore = /store|zustand|redux/i.test(path.basename(file)) ||
             /from ['"](zustand|redux|@reduxjs\/toolkit)['"]/.test(content) ||
             /createContext\s*\(/.test(content) ||
@@ -55,7 +55,7 @@ export async function analyzeNextJsProject(projectPath: string): Promise<GraphDa
             });
             continue;
         }
-        // Detect client/server component
+
         const isClient = /^(['"]use client['\"];?)/m.test(content.split('\n').slice(0, 5).join('\n'));
         nodes.push({
             id,

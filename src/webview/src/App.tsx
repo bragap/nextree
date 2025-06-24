@@ -1,25 +1,37 @@
-import  { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+import TreeView from './components/TreeView';
+import { TreeData } from './lib/constants';
 
-type TreeNode = {
-  name: string;
-  type: string;
-  isClient?: boolean;
-  children?: TreeNode[];
+declare function acquireVsCodeApi(): {
+  postMessage: (msg : {type:string}) => void;
 };
 
 export default function App() {
-  const [tree, setTree] = useState<TreeNode>();
+  const [tree, setTree] = useState<TreeData | undefined>();
 
   useEffect(() => {
-    window.addEventListener('message', (event) => {
-      setTree(event.data);
-    });
+    const vscode = acquireVsCodeApi();
+
+    vscode.postMessage({ type: 'get-tree-data' });
+
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'tree-data') {
+        setTree(event.data.data);
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
   }, []);
+
+  if(!tree){
+    return "Loading tree...";
+  }
 
   return (
     <div style={{ padding: 16 }}>
-      <h1>Árvore de Componentes</h1>
-      <pre>{JSON.stringify(tree, null, 2)}</pre>
+      <h1>Nextree components</h1>
+        <TreeView data={tree}/>
     </div>
   );
 }
