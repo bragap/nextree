@@ -29,9 +29,9 @@ export default function App() {
   }
 
   return (
-    <div style={{ padding: 16 }}>
-      <h1>Nextree components</h1>
+     <main>
+       <h1>Nextree components</h1>
         <TreeView data={tree}/>
-    </div>
+     </main>
   );
 }

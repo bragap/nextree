@@ -17,5 +17,5 @@ export default function App() {
     if (!tree) {
         return "Loading tree...";
     }
-    return (_jsxs("div", { style: { padding: 16 }, children: [_jsx("h1", { children: "Nextree components" }), _jsx(TreeView, { data: tree })] }));
+    return (_jsxs("main", { children: [_jsx("h1", { children: "Nextree components" }), _jsx(TreeView, { data: tree })] }));
 }
