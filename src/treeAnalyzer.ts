@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -24,6 +25,7 @@ export async function analyzeNextJsProject(projectPath: string): Promise<TreeDat
     const nodes: TreeNode[] = [];
     const edges: TreeEdge[] = [];
     const files: string[] = [];
+    const fileToId = new Map<string, string>();
 
     function walk(dir: string) {
         for (const entry of fs.readdirSync(dir)) {
@@ -39,8 +41,9 @@ export async function analyzeNextJsProject(projectPath: string): Promise<TreeDat
     walk(projectPath);
 
     for (const file of files) {
-        const id = path.relative(projectPath, file);
+        const id = randomUUID();
         const content = fs.readFileSync(file, 'utf-8');
+        const pathFile = path.relative(projectPath, file);
 
         const isStore = /store|zustand|redux/i.test(path.basename(file)) ||
             /from ['"](zustand|redux|@reduxjs\/toolkit)['"]/.test(content) ||
@@ -50,9 +53,10 @@ export async function analyzeNextJsProject(projectPath: string): Promise<TreeDat
             nodes.push({
                 id,
                 label: path.basename(file),
-                file: id,
+                file: pathFile,
                 type: 'store',
             });
+            fileToId.set(pathFile, id);
             continue;
         }
 
@@ -60,13 +64,17 @@ export async function analyzeNextJsProject(projectPath: string): Promise<TreeDat
         nodes.push({
             id,
             label: path.basename(file),
-            file: id,
+            file: path.relative(projectPath, file),
             type: isClient ? 'client' : 'server',
         });
+        fileToId.set(pathFile, id);
     }
 
     for (const file of files) {
-        const id = path.relative(projectPath, file);
+        const pathFile = path.relative(projectPath, file);
+        const fromId = fileToId.get(pathFile);
+        if(!fromId) continue;
+
         const content = fs.readFileSync(file, 'utf-8');
         const importRegex = /import\s+.*?from\s+['\"](.*?)['\"]/g;
         let match;
@@ -76,8 +84,10 @@ export async function analyzeNextJsProject(projectPath: string): Promise<TreeDat
                 let importedFile = path.resolve(path.dirname(file), importPath);
                 let found = files.find(f => f.startsWith(importedFile));
                 if (found) {
-                    const to = path.relative(projectPath, found);
-                    edges.push({ from: id, to });
+                    const toPathFile = path.relative(projectPath, found);
+                    const toId = fileToId.get(toPathFile);
+                    if(!toId) continue;
+                    edges.push({ from: fromId, to: toId });
                 }
             }
         }

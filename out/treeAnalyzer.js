@@ -34,6 +34,7 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.analyzeNextJsProject = analyzeNextJsProject;
+const crypto_1 = require("crypto");
 const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
 const IGNORED_DIRS = ['node_modules', '.next', 'out', 'dist', '.git'];
@@ -41,6 +42,7 @@ async function analyzeNextJsProject(projectPath) {
     const nodes = [];
     const edges = [];
     const files = [];
+    const fileToId = new Map();
     function walk(dir) {
         for (const entry of fs.readdirSync(dir)) {
             const fullPath = path.join(dir, entry);
@@ -56,8 +58,9 @@ async function analyzeNextJsProject(projectPath) {
     }
     walk(projectPath);
     for (const file of files) {
-        const id = path.relative(projectPath, file);
+        const id = (0, crypto_1.randomUUID)();
         const content = fs.readFileSync(file, 'utf-8');
+        const pathFile = path.relative(projectPath, file);
         const isStore = /store|zustand|redux/i.test(path.basename(file)) ||
             /from ['"](zustand|redux|@reduxjs\/toolkit)['"]/.test(content) ||
             /createContext\s*\(/.test(content) ||
@@ -66,21 +69,26 @@ async function analyzeNextJsProject(projectPath) {
             nodes.push({
                 id,
                 label: path.basename(file),
-                file: id,
+                file: pathFile,
                 type: 'store',
             });
+            fileToId.set(pathFile, id);
             continue;
         }
         const isClient = /^(['"]use client['\"];?)/m.test(content.split('\n').slice(0, 5).join('\n'));
         nodes.push({
             id,
             label: path.basename(file),
-            file: id,
+            file: path.relative(projectPath, file),
             type: isClient ? 'client' : 'server',
         });
+        fileToId.set(pathFile, id);
     }
     for (const file of files) {
-        const id = path.relative(projectPath, file);
+        const pathFile = path.relative(projectPath, file);
+        const fromId = fileToId.get(pathFile);
+        if (!fromId)
+            continue;
         const content = fs.readFileSync(file, 'utf-8');
         const importRegex = /import\s+.*?from\s+['\"](.*?)['\"]/g;
         let match;
@@ -90,8 +98,11 @@ async function analyzeNextJsProject(projectPath) {
                 let importedFile = path.resolve(path.dirname(file), importPath);
                 let found = files.find(f => f.startsWith(importedFile));
                 if (found) {
-                    const to = path.relative(projectPath, found);
-                    edges.push({ from: id, to });
+                    const toPathFile = path.relative(projectPath, found);
+                    const toId = fileToId.get(toPathFile);
+                    if (!toId)
+                        continue;
+                    edges.push({ from: fromId, to: toId });
                 }
             }
         }

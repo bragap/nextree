@@ -36,7 +36,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.showTreeWebview = showTreeWebview;
 const vscode = __importStar(require("vscode"));
 function showTreeWebview(context, treeData) {
-    const panel = vscode.window.createWebviewPanel('nextreeComponents', 'Nextree Component Tree', vscode.ViewColumn.One, { enableScripts: true });
+    const panel = vscode.window.createWebviewPanel('nextreeComponents', 'Nextree Component Tree', vscode.ViewColumn.One, { enableScripts: true,
+        localResourceRoots: [
+            vscode.Uri.joinPath(context.extensionUri, 'node_modules'),
+            vscode.Uri.joinPath(context.extensionUri, 'media', 'assets')
+        ]
+    });
     panel.webview.html = getWebviewContent(panel.webview, context.extensionUri);
     panel.webview.onDidReceiveMessage((message) => {
         if (message && message.type === 'get-tree-data') {
@@ -47,12 +52,14 @@ function showTreeWebview(context, treeData) {
 }
 function getWebviewContent(webview, extensionUri) {
     const reactAppUri = webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, 'media', 'assets', 'main.js'));
+    const mainCssUri = webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, 'media', 'assets', 'main.css'));
     return `
     <!DOCTYPE html>
     <html lang="en">
     <head>
         <meta charset="UTF-8" />
-        <title>Nextree Component Tree</title>
+        <title>Nextree Component</title>
+        <link href="${mainCssUri}" rel="stylesheet">
     </head>
     <body>
         <div id="root"></div>

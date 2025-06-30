@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import TreeView from './components/TreeView';
 import { TreeData } from './lib/constants';
+import { ReactFlowProvider } from '@xyflow/react';
 
 declare function acquireVsCodeApi(): {
-  postMessage: (msg : {type:string}) => void;
+  postMessage: (msg: { type: string }) => void;
 };
 
 export default function App() {
@@ -24,14 +25,16 @@ export default function App() {
     return () => window.removeEventListener('message', handleMessage);
   }, []);
 
-  if(!tree){
+  if (!tree) {
     return "Loading tree...";
   }
 
   return (
-     <main>
-       <h1>Nextree components</h1>
-        <TreeView data={tree}/>
-     </main>
+    <main>
+      <h1>Nextree components</h1>
+      <ReactFlowProvider>
+        <TreeView data={tree} />
+      </ReactFlowProvider>
+    </main>
   );
 }

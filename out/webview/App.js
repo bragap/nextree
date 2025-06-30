@@ -1,6 +1,7 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useEffect, useState } from 'react';
 import TreeView from './components/TreeView';
+import { ReactFlowProvider } from '@xyflow/react';
 export default function App() {
     const [tree, setTree] = useState();
     useEffect(() => {
@@ -17,5 +18,5 @@ export default function App() {
     if (!tree) {
         return "Loading tree...";
     }
-    return (_jsxs("main", { children: [_jsx("h1", { children: "Nextree components" }), _jsx(TreeView, { data: tree })] }));
+    return (_jsxs("main", { children: [_jsx("h1", { children: "Nextree components" }), _jsx(ReactFlowProvider, { children: _jsx(TreeView, { data: tree }) })] }));
 }

@@ -1,35 +1,21 @@
 import {
   ReactFlow,
-  Background,
-  Controls,
   Node,
   Edge,
-  MarkerType
+  useNodesState,
+  useEdgesState,
+  Background,
+  Controls
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useCallback } from 'react';
-import { TreeData, TreeNode } from '../lib/constants';
+import { TreeData } from '../lib/constants';
+import { getLayoutedElements, toReactFlowEdge, toReactFlowNode } from '../lib/utils';
 
 interface TreeViewProps {
   data: TreeData
 }
-
-const getNodeBackground = (n:TreeNode) => {
-  if(n.label === 'page.tsx') return('#ff0000');
-
-  switch (n.type){
-  case('client') :
-  return ('#4caf50')
-  case ('server'):
-    return ('#2196f3')
-  case ('store'):
-    return('#ff9800')
-  default:
-     return('#ff0000')
-}
-}
-
 
 export default function TreeView({ data }: TreeViewProps) {
 
@@ -50,12 +36,8 @@ export default function TreeView({ data }: TreeViewProps) {
     const subNodes = data.nodes.filter(n => visited.has(n.id));
     const subEdges = data.edges.filter(e => visited.has(e.from) && visited.has(e.to));
 
-    return { subNodes, subEdges };
-  },
-    [data]
+    return { subNodes, subEdges }},[data]
   );
-
-
 
   const [selectedPage, setSelectedPage] = useState(pageNodes[0]?.id);
 
@@ -63,99 +45,56 @@ export default function TreeView({ data }: TreeViewProps) {
     return getSubtree(selectedPage);
   }, [getSubtree, selectedPage]);
 
-  const nodes: Node[] = useMemo(() => {
+  const { nodes: layoutedNodes, edges: layoutedEdges } = useMemo(() => {
+    const reactFlowNodes = toReactFlowNode(subNodes);
+    const reactFlowEdges = toReactFlowEdge(subEdges);
+    return getLayoutedElements(reactFlowNodes, reactFlowEdges);
+  }, [subNodes, subEdges]);
 
-    const gridCols = Math.ceil(Math.sqrt(subNodes.length));
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
 
-    return subNodes.map((n, index) => {
-      const row = Math.floor(index / gridCols);
-      const col = index % gridCols;
+  useEffect(() => {
+    setNodes(layoutedNodes);
+  }, [layoutedNodes, setNodes]);
 
-      return {
-        id: n.id,
-        data: { label: n.label },
-        position: {x:0,y:0},
-        style: {
-          background: getNodeBackground(n),
-          color: 'white',
-          borderRadius: '8px',
-          width: 160,
-          height: 60,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontWeight: 'bold',
-          fontSize: 12,
-          textAlign: 'center',
-          padding: '4px',
-          border: '2px solid #333',
-          overflow: 'hidden',
-          wordBreak: 'break-word',
-        },
-      };
-    });
-  }, [subNodes])
-
-  const edges: Edge[] = useMemo(() => {
-    console.log('Creating edges from subEdges:', subEdges.length);
-
-    const edgeMap = new Map<string, string[]>();
-    subEdges.forEach(edge => {
-      if (!edgeMap.has(edge.from)) {
-        edgeMap.set(edge.from, []);
-      }
-      edgeMap.get(edge.from)!.push(edge.to);
-    });
-
-    console.log('Edge connections:', Array.from(edgeMap.entries()).slice(0, 5));
-
-    return subEdges.map(e => ({
-      id: `${e.from}-${e.to}`,
-      source: e.from,
-      target: e.to,
-      animated: false,
-      style: {
-        stroke: '#666',
-        strokeWidth: 1,
-      },
-      markerEnd: {
-        type: MarkerType.ArrowClosed,
-        color: '#666',
-        width: 15,
-        height: 15,
-      },
-    }));
-  }, [subEdges])
+  useEffect(() => {
+    setEdges(layoutedEdges);
+  }, [layoutedEdges, setEdges]);
 
   return (
-    <div>
+    <div className='react-flow'>
       <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
         {pageNodes
-        .filter(page => {
-         const subtree = getSubtree(page.id);
-         return subtree.subNodes.length > 1;
-        })
-        .map(page => (
-          <button
-            key={page.id}
-            onClick={() => setSelectedPage(page.id)}
-            style={{
-              fontWeight: selectedPage === page.id ? 'bold' : 'normal',
-              padding: '4px 8px',
-            }}
-          >
-            {page.id.replace(/.*app[\\/]/, '/').replace(/[\\/][^\\/]+$/, '') ||
-              '/'}
-          </button>
-        ))}
+          .filter(page => {
+            const subtree = getSubtree(page.id);
+            return subtree.subNodes.length > 1;
+          })
+          .map(page => (
+            <button
+              key={page.id}
+              onClick={() => setSelectedPage(page.id)}
+              style={{
+                fontWeight: selectedPage === page.id ? 'bold' : 'normal',
+                padding: '4px 8px',
+                cursor: 'pointer',
+                borderRadius: '5px'
+              }}
+            >
+              {page.file.replace(/.*app[\\/]/, '/').replace(/[\\/][^\\/]+$/, '') ||
+                '/'}
+            </button>
+          ))}
       </div>
       <div style={{ height: '85vh', width: '100%' }}>
         <ReactFlow
           nodes={nodes}
           edges={edges}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
         >
           <Background />
-          <Controls />
+          <Controls className="xy-controls-button"/>
         </ReactFlow>
       </div>
     </div>

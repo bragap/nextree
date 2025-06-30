@@ -1,1 +1,1 @@
-{"root":["../../src/webview/src/app.tsx","../../src/webview/src/main.tsx","../../src/webview/src/vite-env.d.ts","../../src/webview/src/components/treeview.tsx","../../src/webview/src/lib/constants.ts"],"version":"5.8.3"}
+{"root":["../../src/webview/src/app.tsx","../../src/webview/src/main.tsx","../../src/webview/src/vite-env.d.ts","../../src/webview/src/components/treeview.tsx","../../src/webview/src/lib/constants.ts","../../src/webview/src/lib/utils.ts"],"version":"5.8.3"}

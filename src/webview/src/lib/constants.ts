@@ -1,3 +1,6 @@
+export const NODE_WIDTH = 150;
+export const NODE_HEIGHT = 50;
+
 export interface TreeNode {
   id: string;
   label: string;
