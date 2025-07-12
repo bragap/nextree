@@ -1,0 +1,114 @@
+/* TreeView Component Styles */
+
+.tree-view-header {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+}
+
+.tree-view-controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.tree-view-label {
+  font-size: 18px;
+  margin: 0;
+}
+
+.tree-view-select {
+  border-radius: 8px;
+  height: 35px;
+  padding-right: 10px;
+  border: 1px solid #ccc;
+  background-color: white;
+  font-size: 14px;
+}
+
+
+.tree-view-caption-title {
+  font-size: 18px;
+  margin: 0 0 8px 0;
+}
+
+.tree-view-legend {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.tree-view-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tree-view-legend-color {
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.tree-view-legend-color--client {
+  background-color: #4caf50;
+}
+
+.tree-view-legend-color--server {
+  background-color: #2196f3;
+}
+
+.tree-view-legend-color--store {
+  background-color: #ff9800;
+}
+
+.tree-view-legend-color--default {
+  background-color: #ff0000;
+}
+
+.tree-view-flow-container {
+  height: 85vh;
+  width: 100%;
+}
+
+/* Additional utility classes for better organization */
+.text-sm {
+  font-size: 14px;
+}
+
+.text-base {
+  font-size: 16px;
+}
+
+.text-lg {
+  font-size: 18px;
+}
+
+.flex {
+  display: flex;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.gap-2 {
+  gap: 8px;
+}
+
+.gap-3 {
+  gap: 12px;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.justify-between {
+  justify-content: space-between;
+}

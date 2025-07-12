@@ -1,3 +1,4 @@
+import '../globals.css';
 import {
   ReactFlow,
   Node,
@@ -36,7 +37,8 @@ export default function TreeView({ data }: TreeViewProps) {
     const subNodes = data.nodes.filter(n => visited.has(n.id));
     const subEdges = data.edges.filter(e => visited.has(e.from) && visited.has(e.to));
 
-    return { subNodes, subEdges }},[data]
+    return { subNodes, subEdges }
+  }, [data]
   );
 
   const [selectedPage, setSelectedPage] = useState(pageNodes[0]?.id);
@@ -64,24 +66,51 @@ export default function TreeView({ data }: TreeViewProps) {
 
   return (
     <div className='react-flow'>
-      <div style={{ display: 'flex', gap: 10, alignItems:'center', marginBottom: 8, paddingBottom:8 }}>
-        <p style={{fontSize: 18}}>Select the page:</p>
-        <select value = {selectedPage} style={{borderRadius: 20, height: '35px', paddingLeft: '10px', paddingRight: '10px'}} onChange = {(e) => setSelectedPage(e.target.value)}>
-        {pageNodes
-          .filter(page => {
-            const subtree = getSubtree(page.id);
-            return subtree.subNodes.length > 1;
-          })
-          .map(page => (
-              <option 
-              key={page.id}
-              value={page.id}
-              >
+      <div className="tree-view-header">
+        <div className="tree-view-controls">
+          <p className="tree-view-label">Select the page:</p>
+          <select 
+            value={selectedPage} 
+            className="tree-view-select"
+            onChange={(e) => setSelectedPage(e.target.value)}
+          >
+            {pageNodes
+              .filter(page => {
+                const subtree = getSubtree(page.id);
+                return subtree.subNodes.length > 1;
+              })
+              .map(page => (
+                <option
+                  key={page.id}
+                  value={page.id}
+                >
                   {page.file.replace(/.*app[\\/]/, '/').replace(/[\\/][^\\/]+$/, '') || '/'}</option>
-          ))}
+              ))}
           </select>
+        </div>
+        <div>
+          <p className="tree-view-caption-title">Caption</p>
+          <div className="tree-view-legend">
+            <div className="tree-view-legend-item">
+              <span>Root page.tsx</span>
+              <div className="tree-view-legend-color tree-view-legend-color--default"></div>
+            </div>
+            <div className="tree-view-legend-item">
+              <span>Client component:</span>
+              <div className="tree-view-legend-color tree-view-legend-color--client"></div>
+            </div>
+            <div className="tree-view-legend-item">
+              <span>Server component:</span>
+              <div className="tree-view-legend-color tree-view-legend-color--server"></div>
+            </div>
+            <div className="tree-view-legend-item">
+              <span>Store:</span>
+              <div className="tree-view-legend-color tree-view-legend-color--store"></div>
+            </div>
+          </div>
+        </div>
       </div>
-      <div style={{ height: '85vh', width: '100%' }}>
+      <div className="tree-view-flow-container">
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -89,7 +118,7 @@ export default function TreeView({ data }: TreeViewProps) {
           onEdgesChange={onEdgesChange}
         >
           <Background />
-          <Controls className="xy-controls-button"/>
+          <Controls className="xy-controls-button" />
         </ReactFlow>
       </div>
     </div>

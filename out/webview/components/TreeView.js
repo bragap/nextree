@@ -1,4 +1,5 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import '../globals.css';
 import { ReactFlow, useNodesState, useEdgesState, Background, Controls } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { useEffect, useMemo, useState } from 'react';
@@ -38,10 +39,10 @@ export default function TreeView({ data }) {
     useEffect(() => {
         setEdges(layoutedEdges);
     }, [layoutedEdges, setEdges]);
-    return (_jsxs("div", { className: 'react-flow', children: [_jsxs("div", { style: { display: 'flex', gap: 10, alignItems: 'center', marginBottom: 8, paddingBottom: 8 }, children: [_jsx("p", { style: { fontSize: 18 }, children: "Select the page:" }), _jsx("select", { value: selectedPage, style: { borderRadius: 20, height: '35px', paddingLeft: '10px', paddingRight: '10px' }, onChange: (e) => setSelectedPage(e.target.value), children: pageNodes
-                            .filter(page => {
-                            const subtree = getSubtree(page.id);
-                            return subtree.subNodes.length > 1;
-                        })
-                            .map(page => (_jsx("option", { value: page.id, children: page.file.replace(/.*app[\\/]/, '/').replace(/[\\/][^\\/]+$/, '') || '/' }, page.id))) })] }), _jsx("div", { style: { height: '85vh', width: '100%' }, children: _jsxs(ReactFlow, { nodes: nodes, edges: edges, onNodesChange: onNodesChange, onEdgesChange: onEdgesChange, children: [_jsx(Background, {}), _jsx(Controls, { className: "xy-controls-button" })] }) })] }));
+    return (_jsxs("div", { className: 'react-flow', children: [_jsxs("div", { className: "tree-view-header", children: [_jsxs("div", { className: "tree-view-controls", children: [_jsx("p", { className: "tree-view-label", children: "Select the page:" }), _jsx("select", { value: selectedPage, className: "tree-view-select", onChange: (e) => setSelectedPage(e.target.value), children: pageNodes
+                                    .filter(page => {
+                                    const subtree = getSubtree(page.id);
+                                    return subtree.subNodes.length > 1;
+                                })
+                                    .map(page => (_jsx("option", { value: page.id, children: page.file.replace(/.*app[\\/]/, '/').replace(/[\\/][^\\/]+$/, '') || '/' }, page.id))) })] }), _jsxs("div", { children: [_jsx("p", { className: "tree-view-caption-title", children: "Caption" }), _jsxs("div", { className: "tree-view-legend", children: [_jsxs("div", { className: "tree-view-legend-item", children: [_jsx("span", { children: "Root page.tsx" }), _jsx("div", { className: "tree-view-legend-color tree-view-legend-color--default" })] }), _jsxs("div", { className: "tree-view-legend-item", children: [_jsx("span", { children: "Client component:" }), _jsx("div", { className: "tree-view-legend-color tree-view-legend-color--client" })] }), _jsxs("div", { className: "tree-view-legend-item", children: [_jsx("span", { children: "Server component:" }), _jsx("div", { className: "tree-view-legend-color tree-view-legend-color--server" })] }), _jsxs("div", { className: "tree-view-legend-item", children: [_jsx("span", { children: "Store:" }), _jsx("div", { className: "tree-view-legend-color tree-view-legend-color--store" })] })] })] })] }), _jsx("div", { className: "tree-view-flow-container", children: _jsxs(ReactFlow, { nodes: nodes, edges: edges, onNodesChange: onNodesChange, onEdgesChange: onEdgesChange, children: [_jsx(Background, {}), _jsx(Controls, { className: "xy-controls-button" })] }) })] }));
 }
