@@ -26,7 +26,7 @@ export const toReactFlowNode = (treeNode: TreeNode[]): Node[] => {
             background: getNodeBackground(treeNode),
             color: 'white',
             borderRadius: '8px',
-            width: NODE_WIDTH,
+            width: "auto",
             height: NODE_HEIGHT,
             display: 'flex',
             alignItems: 'center',

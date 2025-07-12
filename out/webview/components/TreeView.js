@@ -38,16 +38,10 @@ export default function TreeView({ data }) {
     useEffect(() => {
         setEdges(layoutedEdges);
     }, [layoutedEdges, setEdges]);
-    return (_jsxs("div", { className: 'react-flow', children: [_jsx("div", { style: { display: 'flex', gap: 8, marginBottom: 8 }, children: pageNodes
-                    .filter(page => {
-                    const subtree = getSubtree(page.id);
-                    return subtree.subNodes.length > 1;
-                })
-                    .map(page => (_jsx("button", { onClick: () => setSelectedPage(page.id), style: {
-                        fontWeight: selectedPage === page.id ? 'bold' : 'normal',
-                        padding: '4px 8px',
-                        cursor: 'pointer',
-                        borderRadius: '5px'
-                    }, children: page.file.replace(/.*app[\\/]/, '/').replace(/[\\/][^\\/]+$/, '') ||
-                        '/' }, page.id))) }), _jsx("div", { style: { height: '85vh', width: '100%' }, children: _jsxs(ReactFlow, { nodes: nodes, edges: edges, onNodesChange: onNodesChange, onEdgesChange: onEdgesChange, children: [_jsx(Background, {}), _jsx(Controls, { className: "xy-controls-button" })] }) })] }));
+    return (_jsxs("div", { className: 'react-flow', children: [_jsxs("div", { style: { display: 'flex', gap: 10, alignItems: 'center', marginBottom: 8, paddingBottom: 8 }, children: [_jsx("p", { style: { fontSize: 18 }, children: "Select the page:" }), _jsx("select", { value: selectedPage, style: { borderRadius: 20, height: '35px', paddingLeft: '10px', paddingRight: '10px' }, onChange: (e) => setSelectedPage(e.target.value), children: pageNodes
+                            .filter(page => {
+                            const subtree = getSubtree(page.id);
+                            return subtree.subNodes.length > 1;
+                        })
+                            .map(page => (_jsx("option", { value: page.id, children: page.file.replace(/.*app[\\/]/, '/').replace(/[\\/][^\\/]+$/, '') || '/' }, page.id))) })] }), _jsx("div", { style: { height: '85vh', width: '100%' }, children: _jsxs(ReactFlow, { nodes: nodes, edges: edges, onNodesChange: onNodesChange, onEdgesChange: onEdgesChange, children: [_jsx(Background, {}), _jsx(Controls, { className: "xy-controls-button" })] }) })] }));
 }

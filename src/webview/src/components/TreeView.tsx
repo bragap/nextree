@@ -64,27 +64,22 @@ export default function TreeView({ data }: TreeViewProps) {
 
   return (
     <div className='react-flow'>
-      <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+      <div style={{ display: 'flex', gap: 10, alignItems:'center', marginBottom: 8, paddingBottom:8 }}>
+        <p style={{fontSize: 18}}>Select the page:</p>
+        <select value = {selectedPage} style={{borderRadius: 20, height: '35px', paddingLeft: '10px', paddingRight: '10px'}} onChange = {(e) => setSelectedPage(e.target.value)}>
         {pageNodes
           .filter(page => {
             const subtree = getSubtree(page.id);
             return subtree.subNodes.length > 1;
           })
           .map(page => (
-            <button
+              <option 
               key={page.id}
-              onClick={() => setSelectedPage(page.id)}
-              style={{
-                fontWeight: selectedPage === page.id ? 'bold' : 'normal',
-                padding: '4px 8px',
-                cursor: 'pointer',
-                borderRadius: '5px'
-              }}
-            >
-              {page.file.replace(/.*app[\\/]/, '/').replace(/[\\/][^\\/]+$/, '') ||
-                '/'}
-            </button>
+              value={page.id}
+              >
+                  {page.file.replace(/.*app[\\/]/, '/').replace(/[\\/][^\\/]+$/, '') || '/'}</option>
           ))}
+          </select>
       </div>
       <div style={{ height: '85vh', width: '100%' }}>
         <ReactFlow
